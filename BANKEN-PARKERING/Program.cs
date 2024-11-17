@@ -1,5 +1,6 @@
-﻿using System.Text;
-using System.Text.Json;
+﻿using System.Text.Json;
+using Spectre.Console;
+using Figgle;
 
 namespace BANK
 {
@@ -7,102 +8,110 @@ namespace BANK
     {
         static void Main(string[] args)
         {
-            string dataJSONfilPath = "BankData.json";// Ange sökvägen till JSON-filen
+            string dataJSONfilPath = "BankData.json"; // Ange sökvägen till JSON-filen
 
-            string allaDataSomJSONType = File.ReadAllText(dataJSONfilPath);// Läs JSON-innehållet från filen
+            string allaDataSomJSONType = File.ReadAllText(dataJSONfilPath); // Läs JSON-innehållet från filen
 
-            DataBas databas = JsonSerializer.Deserialize<DataBas>(allaDataSomJSONType)!;// Deserialisera JSON-innehållet till ett DataBas-objekt
+            DataBas databas = JsonSerializer.Deserialize<DataBas>(allaDataSomJSONType)!; // Deserialisera JSON-innehållet till ett DataBas-objekt
 
             BankHanterare bankHanterare = new BankHanterare(databas);
             HjälpMetoder help = new HjälpMetoder(databas);
             ParkeringsHanterare Parkering = new ParkeringsHanterare(databas);
 
-
             bool ProgramIsRuning = true;
+
+            // Visa startlogga med Figgle
+            Console.Clear();
+            AnsiConsole.Markup("[bold yellow]Välkommen till:[/]");
+            Console.WriteLine();
+            Console.WriteLine(FiggleFonts.Standard.Render("BANKAPP"));
 
             while (ProgramIsRuning)
             {
-                Bankkonto? konto = bankHanterare.Pinkod(); //Jämför pinkod med konton
+                Bankkonto? konto = bankHanterare.Pinkod(); // Jämför pinkod med konton
 
                 if (konto != null)
                 {
                     bool BigProgram = true;
                     Console.Clear();
-                    Console.WriteLine($"Välkommen tillbaka *{konto.Namn}*!\n");
+                    AnsiConsole.Markup($"[bold green]Välkommen tillbaka {konto.Namn}![/]\n");
 
                     while (BigProgram)
                     {
-                        Console.WriteLine("---Detta är din Bankmeny---");
-                        Console.WriteLine("Tryck (1) för att kolla ditt saldo");
-                        Console.WriteLine("Tryck (2) för överföra pengar");
-                        Console.WriteLine("Tryck (3) för att redigera din kontoinfo");
-                        Console.WriteLine("Tryck (4) för att se historik");
-                        Console.WriteLine("Tryck (5) för att logga ut");
-                        Console.WriteLine("Tryck (6) för att starta parkering");
-                        Console.WriteLine("Tryck (7) för att avsluta parkering");
-                        Console.WriteLine("Tryck (8) för att visa pågående parkeringar");
-                        Console.WriteLine("Tryck (9) för att stänga av programet");
-                        string menuoptionONE = Console.ReadLine()!;
+                        // Skapa en interaktiv meny med Spectre.Console
+                        var choice = AnsiConsole.Prompt(
+                            new SelectionPrompt<string>()
+                                .Title("[bold yellow]---Detta är din Bankmeny---[/]")
+                                .PageSize(10)
+                                .AddChoices(new[]
+                                {
+                                    "Kolla ditt saldo",
+                                    "Överför pengar",
+                                    "Redigera kontoinfo",
+                                    "Se historik",
+                                    "Logga ut",
+                                    "Starta parkering",
+                                    "Avsluta parkering",
+                                    "Visa pågående parkeringar",
+                                    "Stäng av programmet"
+                                }));
 
-                        switch (menuoptionONE)
+                        switch (choice)
                         {
-                            case "1":
-                                Console.Clear();
-                                Console.WriteLine($"Ditt saldo är: {konto.Saldo} kr");
+                            case "Kolla ditt saldo":
+                                AnsiConsole.Markup($"[bold cyan]Ditt saldo är: {konto.Saldo} kr[/]");
                                 help.Pausa();
                                 break;
 
-                            case "2":
+                            case "Överför pengar":
                                 bankHanterare.TransferMoney();
                                 help.Pausa();
                                 break;
 
-                            case "3":
+                            case "Redigera kontoinfo":
                                 bankHanterare.EditAccountName();
                                 help.Pausa();
                                 break;
 
-                            case "4":
-                                bankHanterare.PrintTransaction();
+                            case "Se historik":
+                                bankHanterare.PrintTransaction(); // Int fullständig
                                 help.Pausa();
                                 break;
-                            case "5":
-                                Console.WriteLine("Du har loggat ut");
+
+                            case "Logga ut":
+                                AnsiConsole.Markup("[bold yellow]Du har loggat ut.[/]");
                                 BigProgram = false;
                                 break;
-                            case "6":
+
+                            case "Starta parkering":
                                 Parkering.StartaParkering();
                                 break;
-                            case "7":
+
+                            case "Avsluta parkering":
                                 Parkering.AvslutaParkering(konto);
                                 break;
-                            case "8":
+
+                            case "Visa pågående parkeringar":
                                 Parkering.VisaAktivaParkeringar();
                                 break;
 
-                            case "9":
-                                Console.WriteLine("Programmet är avslutat");
+                            case "Stäng av programmet":
+                                AnsiConsole.Markup("[bold red]Programmet är avslutat.[/]");
                                 BigProgram = false;
                                 ProgramIsRuning = false;
                                 break;
 
                             default:
-                                Console.WriteLine("Ogiltigt val. Vänligen försök igen.");
+                                AnsiConsole.Markup("[bold red]Ogiltigt val. Vänligen försök igen.[/]");
                                 break;
                         }
                     }
-
                 }
-
-
                 else
                 {
-                    Console.WriteLine("Felaktig pinkod. Försök igen.");
+                    AnsiConsole.Markup("[bold red]Felaktig pinkod. Försök igen.[/]");
                 }
             }
-
-
         }
-
     }
 }

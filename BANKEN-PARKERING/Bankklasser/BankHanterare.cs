@@ -81,12 +81,14 @@ namespace BANK
                 Console.WriteLine($"Överföring genomförd. Ditt nya saldo: {userAccount.Saldo}.");
                 Console.WriteLine($"Mottagarens nya saldo: {targetAccount.Saldo}.");
 
+                help.SaveData(databas);
                 LogTransaction(userAccount.Kontonummer, targetAccount.Kontonummer, moneyToTransfer);
             }
             else
             {
                 Console.WriteLine("Mottagarkontot hittades inte");
             }
+
         }
 
         public void EditAccountName()

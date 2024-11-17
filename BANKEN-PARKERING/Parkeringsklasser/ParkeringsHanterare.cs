@@ -78,17 +78,18 @@ namespace BANK
                 decimal kostnad = parkering.GetKostnad();
                 databas.AktivaParkeringarFrånDB!.Remove(parkering);
                 databas.AvslutadeParkeringarFrånDB!.Add(parkering);
+                konto.Saldo =konto.Saldo - (int)Math.Ceiling(kostnad);
 
                 var transaktion = new Transaction
                 {
                     FromAccount = konto.Kontonummer,
                     ToAccount = 999901,
-                    Amount = kostnad,
+                    Amount = (int)Math.Ceiling(kostnad),
                     Date = DateTime.Now
                 };
 
                 databas.transactionList!.Add(transaktion);
-                Console.WriteLine($"Parkeringen avslutad. Totalkostnad: {kostnad} kr");
+                Console.WriteLine($"Parkeringen avslutad. Totalkostnad: {(int)Math.Ceiling(kostnad)} kr");
             }
             else
             {
