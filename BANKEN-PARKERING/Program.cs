@@ -26,15 +26,37 @@ namespace BANK
             Console.WriteLine();
             Console.WriteLine(FiggleFonts.Standard.Render("BANKAPP"));
 
+            
+
             while (ProgramIsRuning)
             {
-                Bankkonto? konto = bankHanterare.Pinkod(); // Jämför pinkod med konton
+
+                var AccChoice = AnsiConsole.Prompt(
+                            new SelectionPrompt<string>()
+                                .Title("[bold yellow]*Vilket typ av konto vill du logga in med?*[/]")
+                                .PageSize(10)
+                                .AddChoices(new[]
+                                {
+                                    "PrivatKonto",
+                                    "FöretagsKonto"
+                                }));
+
+                var konto = bankHanterare.Pinkod(AccChoice);
 
                 if (konto != null)
                 {
                     bool BigProgram = true;
                     Console.Clear();
-                    AnsiConsole.Markup($"[bold green]Välkommen tillbaka {konto.Namn}![/]\n");
+
+                    // Kontrollera vilken typ av konto och visa rätt meddelande
+                    if (AccChoice == "PrivatKonto" && konto is Bankkonto privatKonto)
+                    {
+                        AnsiConsole.Markup($"[bold green]Välkommen {privatKonto.Namn}![/]\n");
+                    }
+                    else if (AccChoice == "FöretagsKonto" && konto is FöretagsBankkonton företagsKonto)
+                    {
+                        AnsiConsole.Markup($"[bold green]Välkommen {företagsKonto.FöretagsNamn}![/]\n");
+                    }
 
                     while (BigProgram)
                     {
@@ -59,7 +81,14 @@ namespace BANK
                         switch (choice)
                         {
                             case "Kolla ditt saldo":
-                                AnsiConsole.Markup($"[bold cyan]Ditt saldo är: {konto.Saldo} kr[/]");
+                                if (konto is Bankkonto bankkonto)
+                                {
+                                    AnsiConsole.Markup($"[bold cyan]Ditt saldo är: {bankkonto.Saldo} kr[/]");
+                                }
+                                else if(konto is FöretagsBankkonton företagskonto)
+                                {
+                                    AnsiConsole.Markup($"[bold cyan]Ditt saldo är: {företagskonto.Saldo} kr[/]");
+                                }
                                 help.Pausa();
                                 break;
 
@@ -79,6 +108,7 @@ namespace BANK
                                 break;
 
                             case "Logga ut":
+                                Console.Clear();
                                 AnsiConsole.Markup("[bold yellow]Du har loggat ut.[/]");
                                 BigProgram = false;
                                 break;
@@ -87,8 +117,8 @@ namespace BANK
                                 Parkering.StartaParkering();
                                 break;
 
-                            case "Avsluta parkering":
-                                Parkering.AvslutaParkering(konto);
+                            case "Avsluta parkering": //denna måste fixas
+                                Parkering.AvslutaParkering();
                                 break;
 
                             case "Visa pågående parkeringar":

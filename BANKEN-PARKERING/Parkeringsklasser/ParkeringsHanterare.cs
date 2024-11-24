@@ -7,11 +7,11 @@ namespace BANK
     {
         public DataBas databas;
         public HjälpMetoder help;
-        public Bankkonto bank;
+        public Bankkonto bankkonton;
         public BankHanterare bankH;
         public Parkering parkeringsklass;
 
-        public List<Bankkonto> bankkonton { get; set; }
+        public List<Bankkonto> bankkonto { get; set; }
         public List<Transaction> transaction { get; set; }
         public List<Parkering> AktivParkering { get; set; }
         public List<Parkering> AvslutadParkering { get; set; }
@@ -19,7 +19,7 @@ namespace BANK
         public ParkeringsHanterare(DataBas databas)
         {
             this.databas = databas;
-            bankkonton = databas.AllaBankontonFrånDB!;
+            bankkonto = databas.AllaBankontonFrånDB!;
             transaction = databas.transactionList!;
             AktivParkering = databas.AktivaParkeringarFrånDB!;
             AvslutadParkering = databas.AvslutadeParkeringarFrånDB!;
@@ -67,8 +67,15 @@ namespace BANK
             help.Pausa();
         }
 
-        public void AvslutaParkering(Bankkonto konto)
+
+        public void AvslutaParkering()
         {
+            if (AktivParkering == null || AktivParkering.Count == 0)
+            {
+                Console.WriteLine("Inga aktiva parkeringar är tillgängliga.");
+                return;
+            }
+
             Console.WriteLine("Ange registreringsnummer för att avsluta parkering:");
             string regNummer = Console.ReadLine()!.ToUpper();
             var parkering = databas.AktivaParkeringarFrånDB!.FirstOrDefault(p => p.RegNummer == regNummer);
@@ -76,28 +83,73 @@ namespace BANK
             if (parkering != null)
             {
                 decimal kostnad = parkering.GetKostnad();
-                databas.AktivaParkeringarFrånDB!.Remove(parkering);
-                databas.AvslutadeParkeringarFrånDB!.Add(parkering);
-                konto.Saldo =konto.Saldo - (int)Math.Ceiling(kostnad);
 
-                var transaktion = new Transaction
+                // Låt användaren välja ett bankkonto
+                Console.WriteLine("Välj bankkonto att debitera från:");
+                int index = 1;
+                foreach (var konto in bankkonto)
                 {
-                    FromAccount = konto.Kontonummer,
-                    ToAccount = 999901,
-                    Amount = (int)Math.Ceiling(kostnad),
-                    Date = DateTime.Now
-                };
+                    Console.WriteLine($"{index}. Kontonummer: {konto.Kontonummer}, Saldo: {konto.Saldo}kr");
+                    index++;
+                }
 
-                databas.transactionList!.Add(transaktion);
-                Console.WriteLine($"Parkeringen avslutad. Totalkostnad: {(int)Math.Ceiling(kostnad)} kr");
+                int kontoVal = 0;
+                bool validChoice = false;
+
+                while (!validChoice)
+                {
+                    Console.Write("Ange siffra för valt konto: ");
+                    string input = Console.ReadLine()!;
+
+                    if (int.TryParse(input, out kontoVal) && kontoVal > 0 && kontoVal <= bankkonto.Count)
+                    {
+                        validChoice = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ogiltigt val. Försök igen.");
+                    }
+                }
+
+                var valtKonto = bankkonto[kontoVal - 1];
+
+                // Kontrollera saldo och debitera
+                if (valtKonto.Saldo >= (int)Math.Ceiling(kostnad))
+                {
+                    valtKonto.Saldo -= (int)Math.Ceiling(kostnad);
+
+                    // Uppdatera listorna
+                    databas.AktivaParkeringarFrånDB!.Remove(parkering);
+                    databas.AvslutadeParkeringarFrånDB!.Add(parkering);
+
+                    // Skapa och spara transaktion
+                    var transaktion = new Transaction
+                    {
+                        FromAccount = valtKonto.Kontonummer,
+                        ToAccount = 999901, // Exempel på företagskonto
+                        Amount = (int)Math.Ceiling(kostnad),
+                        Date = DateTime.Now
+                    };
+
+                    databas.transactionList!.Add(transaktion);
+                    Console.WriteLine($"Parkeringen avslutad. Totalkostnad: {(int)Math.Ceiling(kostnad)} kr");
+                }
+                else
+                {
+                    Console.WriteLine("Det valda bankkontot har inte tillräckligt med saldo för att avsluta parkeringen.");
+                }
             }
             else
             {
                 Console.WriteLine("Parkeringen hittades inte.");
             }
+
             help.SaveData(databas);
             help.Pausa();
         }
+
+
+
 
         public void VisaAktivaParkeringar()
         {

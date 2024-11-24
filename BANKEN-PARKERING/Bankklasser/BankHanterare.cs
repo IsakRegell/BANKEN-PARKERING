@@ -10,11 +10,13 @@ namespace BANK
         public Bankkonto bank;
         public List<Bankkonto> bankkonton { get; set; }
         public List<Transaction> transaction { get; set; }
+        public List<FöretagsBankkonton> företagsBankkonton { get; set; } 
         public BankHanterare(DataBas databas)
         {
             this.databas = databas;
             bankkonton = databas.AllaBankontonFrånDB!;
             transaction = databas.transactionList!;
+            företagsBankkonton = databas.AllaFöretagBankontonFrånDB!;
             this.help = new HjälpMetoder(databas);
         }
 
@@ -27,14 +29,25 @@ namespace BANK
 
         }
 
-        public Bankkonto? Pinkod()
+        public object? Pinkod(string kontotyp)
         {
-            Console.WriteLine("Skriv in din pinkod(4 siffror): ");
+            Console.WriteLine("Skriv in din pinkod (4 siffror): ");
             int pinkodinput = Convert.ToInt32(Console.ReadLine());
 
-            var konto = this.bankkonton.FirstOrDefault(b => b.Pinkod == pinkodinput);
-            return konto;
+            if (kontotyp == "PrivatKonto")
+            {
+                // Hitta privatkonto som matchar pinkoden
+                return this.bankkonton.FirstOrDefault(b => b.Pinkod == pinkodinput);
+            }
+            else if (kontotyp == "FöretagsKonto")
+            {
+                // Hitta företagskonto som matchar pinkoden
+                return this.företagsBankkonton.FirstOrDefault(b => b.Pinkod == pinkodinput);
+            }
+
+            return null; // Om kontotyp inte matchar
         }
+
 
         public void TransferMoney()
         {

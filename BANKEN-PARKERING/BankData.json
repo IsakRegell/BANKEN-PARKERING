@@ -1,9 +1,9 @@
 {
-  "Bankkonton": [
+  "PrivataBankkonton": [
     {
       "Namn": "Amanda Frykmer",
       "Kontonummer": 123456,
-      "Saldo": 5001,
+      "Saldo": 5000,
       "Pinkod": 1234
     },
     {
@@ -11,12 +11,14 @@
       "Kontonummer": 234567,
       "Saldo": 5002,
       "Pinkod": 2345
-    },
+    }
+  ],
+  "FöretagsBankkonton": [
     {
-      "Namn": "Nemo Startklar",
-      "Kontonummer": 345678,
-      "Saldo": 5003,
-      "Pinkod": 3456
+      "FöretagsNamn": "Volvo Cars",
+      "OrgenisationsNummer": 234567,
+      "Saldo": 5000,
+      "Pinkod": 1234
     }
   ],
   "transactionList": [],
